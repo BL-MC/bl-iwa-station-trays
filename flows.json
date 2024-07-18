@@ -355,7 +355,7 @@
             },
             {
                 "t": "eq",
-                "v": "reloadTrays",
+                "v": "admin",
                 "vt": "str"
             }
         ],
@@ -378,7 +378,7 @@
                 "24f5d970df2b1dfa"
             ],
             [
-                "4bc813284823bae3"
+                "e9bf9b5822695ba1"
             ]
         ]
     },
@@ -387,7 +387,7 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Filter MQTT",
-        "func": "let mqttTopic = msg.topic.split('/')\nlet trayName = mqttTopic[3];\nlet actionTopic = mqttTopic[5];\nif (trayName == 'admin')\n{\n    if (actionTopic == 'setting') actionTopic = 'reloadTrays'\n    return {topic:actionTopic, payload:msg.payload};\n}\nif (actionTopic == 'echo')\n{\n    return {topic:'echo', payload:msg.payload};\n}\nlet traysConfig = flow.get('traysConfig');\nlet trayConfig = null;\nfor (let ii = 0; ii < traysConfig.length; ++ii)\n{\n    if (traysConfig[ii].tray.name == trayName)  trayConfig = traysConfig[ii];\n}\nif (trayConfig ==  null) return null;\nreturn {topic:actionTopic, payload:msg.payload, trayConfig:trayConfig};\n",
+        "func": "let mqttTopic = msg.topic.split('/')\nlet trayName = mqttTopic[3];\nlet actionTopic = mqttTopic[5];\nif (trayName == 'admin')\n{\n    if (actionTopic == 'setting') actionTopic = 'admin';\n    return {topic:actionTopic, payload:msg.payload};\n}\nif (actionTopic == 'echo')\n{\n    return {topic:'echo', payload:msg.payload};\n}\nlet traysConfig = flow.get('traysConfig');\nlet trayConfig = null;\nfor (let ii = 0; ii < traysConfig.length; ++ii)\n{\n    if (traysConfig[ii].tray.name == trayName)  trayConfig = traysConfig[ii];\n}\nif (trayConfig ==  null) return null;\nreturn {topic:actionTopic, payload:msg.payload, trayConfig:trayConfig};\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -407,8 +407,8 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Save Trays in flow",
-        "func": "let tray = msg.payload;\nif (tray.name == 'admin')\n{\n    tray.reloadTrays.value = 0;\n    flow.set('adminTray', tray);\n    return null;\n}\nlet traysConfig = flow.get('traysConfig');\nlet blinkybusCubes = [];\nlet blinkybusSettingCubes = [];\nlet keys = Object.keys(msg.payload)\nfor (let ikey  in keys)\n{\n    if (msg.payload[keys[ikey]].hasOwnProperty('type'))\n    {\n        if (msg.payload[keys[ikey]].hasOwnProperty('blinkybus')) \n        {\n            blinkybusCubes.push(keys[ikey]);\n            if (msg.payload[keys[ikey]].action == \"setting\") \n            {\n                blinkybusSettingCubes.push(keys[ikey]);\n            }\n        }\n    }\n}\ntray.trayControl.value = 0;\nlet index = -1;\nfor (let itray in traysConfig)\n{\n    if ((traysConfig[itray].tray.type == tray.type) && (traysConfig[itray].tray.name == tray.name))\n    {\n        index = Number(itray);\n    }\n}\nif (index < 0)\n{\n    traysConfig.push({tray:tray, blinkybusCubes:blinkybusCubes, blinkybusSettingCubes:blinkybusSettingCubes, archiveTime:tray.timeStamp, cubeType:\"cube\"});\n}\nelse\n{\n    traysConfig[index] = {tray:tray, blinkybusCubes:blinkybusCubes, blinkybusSettingCubes:blinkybusSettingCubes, archiveTime:tray.timeStamp, cubeType:\"cube\"};\n}\n//node.warn(flow.get('traysConfig'));\nreturn null;\n",
-        "outputs": 0,
+        "func": "let tray = msg.payload;\nif (tray.name == 'admin')\n{\n    tray.reloadTrays.value = 0;\n    flow.set('adminTray', tray);\n    return {topic:'settingDone', payload:tray};\n}\nlet traysConfig = flow.get('traysConfig');\nlet blinkybusCubes = [];\nlet blinkybusSettingCubes = [];\nlet keys = Object.keys(msg.payload)\nfor (let ikey  in keys)\n{\n    if (msg.payload[keys[ikey]].hasOwnProperty('type'))\n    {\n        if (msg.payload[keys[ikey]].hasOwnProperty('blinkybus')) \n        {\n            blinkybusCubes.push(keys[ikey]);\n            if (msg.payload[keys[ikey]].action == \"setting\") \n            {\n                blinkybusSettingCubes.push(keys[ikey]);\n            }\n        }\n    }\n}\ntray.trayControl.value = 0;\nlet index = -1;\nfor (let itray in traysConfig)\n{\n    if ((traysConfig[itray].tray.type == tray.type) && (traysConfig[itray].tray.name == tray.name))\n    {\n        index = Number(itray);\n    }\n}\nif (index < 0)\n{\n    traysConfig.push({tray:tray, blinkybusCubes:blinkybusCubes, blinkybusSettingCubes:blinkybusSettingCubes, archiveTime:tray.timeStamp, cubeType:\"cube\"});\n}\nelse\n{\n    traysConfig[index] = {tray:tray, blinkybusCubes:blinkybusCubes, blinkybusSettingCubes:blinkybusSettingCubes, archiveTime:tray.timeStamp, cubeType:\"cube\"};\n}\n//node.warn(flow.get('traysConfig'));\nreturn null;\n",
+        "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
@@ -416,7 +416,11 @@
         "libs": [],
         "x": 900,
         "y": 540,
-        "wires": []
+        "wires": [
+            [
+                "f440bf4a174b2012"
+            ]
+        ]
     },
     {
         "id": "cffe9c2a52b1e43e",
@@ -427,8 +431,8 @@
         "links": [
             "6b45b4c31fad6b8b"
         ],
-        "x": 575,
-        "y": 640,
+        "x": 495,
+        "y": 1060,
         "wires": []
     },
     {
@@ -440,8 +444,8 @@
         "links": [
             "ce5672e1f22d7692"
         ],
-        "x": 575,
-        "y": 680,
+        "x": 495,
+        "y": 1100,
         "wires": []
     },
     {
@@ -455,8 +459,8 @@
         "arraySpltType": "len",
         "stream": false,
         "addname": "",
-        "x": 850,
-        "y": 740,
+        "x": 790,
+        "y": 1160,
         "wires": [
             [
                 "98a4717e49bcd3b3"
@@ -474,8 +478,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1030,
-        "y": 740,
+        "x": 970,
+        "y": 1160,
         "wires": [
             [
                 "e616f7335fc84c23"
@@ -494,8 +498,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
-        "y": 680,
+        "x": 350,
+        "y": 1100,
         "wires": [
             [
                 "cffe9c2a52b1e43e"
@@ -523,8 +527,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 680,
-        "y": 740,
+        "x": 600,
+        "y": 1160,
         "wires": [
             [
                 "b2c154f4feeb59ad"
@@ -545,8 +549,8 @@
         "correl": "",
         "expiry": "",
         "broker": "84d80994.260508",
-        "x": 1480,
-        "y": 740,
+        "x": 1680,
+        "y": 820,
         "wires": []
     },
     {
@@ -556,13 +560,15 @@
         "name": "deviceMQTT publish",
         "links": [
             "e616f7335fc84c23",
-            "baed8fbe731e1cf0"
+            "baed8fbe731e1cf0",
+            "4418d23ffe13ba35"
         ],
-        "x": 1315,
-        "y": 740,
+        "x": 1515,
+        "y": 820,
         "wires": [
             [
-                "8674b6870aed740f"
+                "8674b6870aed740f",
+                "151071c9330fcaa6"
             ]
         ]
     },
@@ -575,8 +581,8 @@
         "links": [
             "644bd24ad5c779d2"
         ],
-        "x": 1195,
-        "y": 740,
+        "x": 1135,
+        "y": 1160,
         "wires": []
     },
     {
@@ -611,7 +617,8 @@
             "938e10b962484b58",
             "fa6fa09999cb358d",
             "7d549f9bb7ebadca",
-            "aeee56bc51bac5a9"
+            "aeee56bc51bac5a9",
+            "f440bf4a174b2012"
         ],
         "x": 1135,
         "y": 300,
@@ -649,7 +656,8 @@
         "links": [
             "0dba75772bcd5ea0",
             "db68a00ed2d7ce63",
-            "6e6e2c3ef502a90a"
+            "6e6e2c3ef502a90a",
+            "f440bf4a174b2012"
         ],
         "x": 1135,
         "y": 360,
@@ -774,7 +782,7 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Create Setting",
-        "func": "let tray = msg.trayConfig.tray;\nlet mqttMsg = null;\nlet normalSettingMsg = {topic:'settingDone', payload:tray};\nlet trayControlMessage = null;\nlet trayProps  = flow.get('trayProps');\n\nlet icube = msg.trayConfig.blinkybusSettingCubes.indexOf(msg.payload.cube);\nlet bufsize = 4;\nlet buffer = new ArrayBuffer(bufsize);\nlet settingsView = new DataView(buffer);\n\nif (icube >= 0)\n{\n    let cube = msg.trayConfig.tray[msg.payload.cube];\n    cube.value = msg.payload.value;\n    settingsView.setUint8(0, 1); //setting\n    settingsView.setUint8(1, cube.blinkybus.address); //address\n\n    let offset = 0;\n    if (cube.blinkybus.hasOwnProperty(\"offset\")) offset = cube.blinkybus.offset;\n\n    settingsView.setInt16(2, Math.round(cube.value * cube.blinkybus.scale + offset), true); //value\n    mqttMsg = {topic: trayProps.box + \"/\" + msg.trayConfig.cubeType + \"/\" + tray.type + \"/\" + tray.name + \"/setting\", payload:Buffer.from(buffer)};\n}\nelse\n{\n    switch (msg.payload.cube) \n    {\n        case 'xpos':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'ypos':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'zpos':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'msgId':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'warningMsg':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'authorizeBadge':\n            tray[msg.payload.cube].value = msg.payload.value;\n            tray.authorizeBadgeField.value = 0;\n            tray.authorizeBadgeField.value = tray.authorizeBadgeField.value + (tray.msgId.value << 12);\n            tray.authorizeBadgeField.value = tray.authorizeBadgeField.value  + msg.payload.value;            \n            settingsView.setUint8(0, 1); //setting\n            settingsView.setUint8(1, tray.authorizeBadgeField.blinkybus.address); //address\n            settingsView.setInt16(2, tray.authorizeBadgeField.value, true); //value\n            mqttMsg = {topic: trayProps.box + \"/\" + msg.trayConfig.cubeType + \"/\" + tray.type + \"/\" + tray.name + \"/setting\", payload:Buffer.from(buffer)};\n        break;\n        case 'warnBadge':\n            tray[msg.payload.cube].value = msg.payload.value;\n            tray.sendWarningField.value = 0;\n            tray.sendWarningField.value = tray.sendWarningField.value + (tray.msgId.value << 12);\n            tray.sendWarningField.value = tray.sendWarningField.value + (tray.warningMsg.value << 8);\n            tray.sendWarningField.value = tray.sendWarningField.value  + msg.payload.value;            \n            settingsView.setUint8(0, 1); //setting\n            settingsView.setUint8(1, tray.sendWarningField.blinkybus.address); //address\n            settingsView.setInt16(2, tray.sendWarningField.value, true); //value\n            mqttMsg = {topic: trayProps.box + \"/\" + msg.trayConfig.cubeType + \"/\" + tray.type + \"/\" + tray.name + \"/setting\", payload:Buffer.from(buffer)};\n       break;\n        case 'alias':\n            tray.alias.value = msg.payload.value;\n        break;\n        case 'trayControl':\n            switch(msg.payload.value)\n            {\n                case 0:\n                    tray.trayControl.value = 0;\n                    break;\n                case 1:\n                    tray.trayControl.value = -1;\n                    break;\n                case 2:\n                    if (tray.trayControl.value > 0)\n                    {\n                        tray.trayControl.value = 2;\n                        trayControlMessage =\n                        {\n                            topic: trayProps.box + '/tray/' + tray.type + '/' + tray.name + '/echo',\n                            payload: JSON.stringify({ topic: trayProps.box + '/tray/' + tray.type + '/' + tray.name + '/setting/echo' })\n                        };\n                    }\n                    break;\n                default:\n                    tray.trayControl.value = 0;\n                    break;\n             }\n        break;\n        default:\n            break;\n    }\n}\nreturn [mqttMsg, normalSettingMsg, trayControlMessage];",
+        "func": "let tray = msg.trayConfig.tray;\nif (tray[msg.payload.cube].hasOwnProperty('enabled'))\n{\n    if (tray[msg.payload.cube].enabled == 0)\n    {\n        return [null, null, null];\n    }\n}\nlet mqttMsg = null;\nlet normalSettingMsg = {topic:'settingDone', payload:tray};\nlet trayControlMessage = null;\nlet trayProps  = flow.get('trayProps');\n\nlet icube = msg.trayConfig.blinkybusSettingCubes.indexOf(msg.payload.cube);\nlet bufsize = 4;\nlet buffer = new ArrayBuffer(bufsize);\nlet settingsView = new DataView(buffer);\n\nif (icube >= 0)\n{\n    let cube = msg.trayConfig.tray[msg.payload.cube];\n    cube.value = msg.payload.value;\n    settingsView.setUint8(0, 1); //setting\n    settingsView.setUint8(1, cube.blinkybus.address); //address\n\n    let offset = 0;\n    if (cube.blinkybus.hasOwnProperty(\"offset\")) offset = cube.blinkybus.offset;\n\n    settingsView.setInt16(2, Math.round(cube.value * cube.blinkybus.scale + offset), true); //value\n    mqttMsg = {topic: trayProps.box + \"/\" + msg.trayConfig.cubeType + \"/\" + tray.type + \"/\" + tray.name + \"/setting\", payload:Buffer.from(buffer)};\n}\nelse\n{\n    switch (msg.payload.cube) \n    {\n        case 'xpos':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'ypos':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'zpos':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'msgId':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'warningMsg':\n            tray[msg.payload.cube].value = msg.payload.value;\n        break;\n        case 'authorizeBadge':\n            tray[msg.payload.cube].value = msg.payload.value;\n            tray.authorizeBadgeField.value = 0;\n            tray.authorizeBadgeField.value = tray.authorizeBadgeField.value + (tray.msgId.value << 12);\n            tray.authorizeBadgeField.value = tray.authorizeBadgeField.value  + msg.payload.value;            \n            settingsView.setUint8(0, 1); //setting\n            settingsView.setUint8(1, tray.authorizeBadgeField.blinkybus.address); //address\n            settingsView.setInt16(2, tray.authorizeBadgeField.value, true); //value\n            mqttMsg = {topic: trayProps.box + \"/\" + msg.trayConfig.cubeType + \"/\" + tray.type + \"/\" + tray.name + \"/setting\", payload:Buffer.from(buffer)};\n        break;\n        case 'warnBadge':\n            tray[msg.payload.cube].value = msg.payload.value;\n            tray.sendWarningField.value = 0;\n            tray.sendWarningField.value = tray.sendWarningField.value + (tray.msgId.value << 12);\n            tray.sendWarningField.value = tray.sendWarningField.value + (tray.warningMsg.value << 8);\n            tray.sendWarningField.value = tray.sendWarningField.value  + msg.payload.value;            \n            settingsView.setUint8(0, 1); //setting\n            settingsView.setUint8(1, tray.sendWarningField.blinkybus.address); //address\n            settingsView.setInt16(2, tray.sendWarningField.value, true); //value\n            mqttMsg = {topic: trayProps.box + \"/\" + msg.trayConfig.cubeType + \"/\" + tray.type + \"/\" + tray.name + \"/setting\", payload:Buffer.from(buffer)};\n       break;\n        case 'alias':\n            tray.alias.value = msg.payload.value;\n        break;\n        case 'trayControl':\n            switch(msg.payload.value)\n            {\n                case 0:\n                    tray.trayControl.value = 0;\n                    break;\n                case 1:\n                    tray.trayControl.value = -1;\n                    break;\n                case 2:\n                    if (tray.trayControl.value > 0)\n                    {\n                        tray.trayControl.value = 2;\n                        trayControlMessage =\n                        {\n                            topic: trayProps.box + '/tray/' + tray.type + '/' + tray.name + '/echo',\n                            payload: JSON.stringify({ topic: trayProps.box + '/tray/' + tray.type + '/' + tray.name + '/setting/echo' })\n                        };\n                    }\n                    break;\n                default:\n                    tray.trayControl.value = 0;\n                    break;\n             }\n        break;\n        default:\n            break;\n    }\n}\nreturn [mqttMsg, normalSettingMsg, trayControlMessage];",
         "outputs": 3,
         "timeout": "",
         "noerr": 0,
@@ -800,7 +808,7 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Set Alarm Block",
-        "func": "let cubeAlarm = msg.trayConfig.tray[msg.payload.cube].alarm;\ncubeAlarm.limits.lolo = msg.payload.limits.lolo;\ncubeAlarm.limits.low  = msg.payload.limits.low;\ncubeAlarm.limits.high = msg.payload.limits.high;\ncubeAlarm.limits.hihi = msg.payload.limits.hihi;\nreturn {topic:'trayConfigCompleted', payload:msg.trayConfig.tray};",
+        "func": "if (msg.trayConfig.tray[msg.payload.cube].hasOwnProperty('enabled'))\n{\n    if (msg.payload.hasOwnProperty('enabled'))\n    {\n        msg.trayConfig.tray[msg.payload.cube].enabled = msg.payload.enabled;\n    }\n}\nlet cubeAlarm = msg.trayConfig.tray[msg.payload.cube].alarm;\ncubeAlarm.limits.lolo = msg.payload.limits.lolo;\ncubeAlarm.limits.low  = msg.payload.limits.low;\ncubeAlarm.limits.high = msg.payload.limits.high;\ncubeAlarm.limits.hihi = msg.payload.limits.hihi;\nreturn {topic:'trayConfigCompleted', payload:msg.trayConfig.tray};",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -862,25 +870,6 @@
         "wires": []
     },
     {
-        "id": "4bc813284823bae3",
-        "type": "function",
-        "z": "35ebad916f0a27ed",
-        "name": "Reload trays",
-        "func": "if (msg.value == 0) return null;\nreturn {topic:'initFlow', payload: new Date().getTime()}\n",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 890,
-        "y": 600,
-        "wires": [
-            [
-                "e6b2a65ac7c0f8e7"
-            ]
-        ]
-    },
-    {
         "id": "e6b2a65ac7c0f8e7",
         "type": "link out",
         "z": "35ebad916f0a27ed",
@@ -889,8 +878,8 @@
         "links": [
             "a2b6f8c1cd78afa6"
         ],
-        "x": 1045,
-        "y": 600,
+        "x": 1195,
+        "y": 720,
         "wires": []
     },
     {
@@ -920,8 +909,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 320,
-        "y": 600,
+        "x": 240,
+        "y": 1020,
         "wires": [
             [
                 "947b3065ee2175f6"
@@ -941,8 +930,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 1,
-        "x": 250,
-        "y": 680,
+        "x": 170,
+        "y": 1100,
         "wires": [
             [
                 "da3c617faa3892d7"
@@ -957,8 +946,8 @@
         "links": [
             "1849ea2986414070"
         ],
-        "x": 145,
-        "y": 600,
+        "x": 65,
+        "y": 1020,
         "wires": [
             [
                 "a1ac9e631b1c38ed"
@@ -1060,8 +1049,8 @@
         "nl": false,
         "rap": false,
         "inputs": 1,
-        "x": 510,
-        "y": 1020,
+        "x": 560,
+        "y": 1440,
         "wires": [
             [
                 "089d455e88eb4e6a"
@@ -1076,8 +1065,8 @@
         "property": "payload",
         "action": "obj",
         "pretty": false,
-        "x": 670,
-        "y": 1020,
+        "x": 720,
+        "y": 1440,
         "wires": [
             [
                 "935b790bba427d8c"
@@ -1096,8 +1085,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1160,
-        "y": 1060,
+        "x": 1210,
+        "y": 1480,
         "wires": []
     },
     {
@@ -1112,8 +1101,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 280,
-        "y": 1020,
+        "x": 330,
+        "y": 1440,
         "wires": [
             [
                 "e34687eba3651fd3"
@@ -1128,8 +1117,8 @@
         "links": [
             "1849ea2986414070"
         ],
-        "x": 105,
-        "y": 1020,
+        "x": 155,
+        "y": 1440,
         "wires": [
             [
                 "40868ab74c937cc2"
@@ -1218,8 +1207,8 @@
         "initialize": "// Code added here will be run once\n// whenever the node is started.\ncontext.set(\"events\", []);",
         "finalize": "",
         "libs": [],
-        "x": 750,
-        "y": 800,
+        "x": 670,
+        "y": 1220,
         "wires": [
             [
                 "cd511304c39666a6"
@@ -1247,8 +1236,8 @@
         "topic": "cleanup",
         "payload": "",
         "payloadType": "date",
-        "x": 500,
-        "y": 800,
+        "x": 420,
+        "y": 1220,
         "wires": [
             [
                 "e3546a22338aecd5"
@@ -1266,8 +1255,8 @@
         "arraySpltType": "len",
         "stream": false,
         "addname": "",
-        "x": 950,
-        "y": 800,
+        "x": 890,
+        "y": 1220,
         "wires": [
             [
                 "aeee56bc51bac5a9",
@@ -1287,8 +1276,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 810,
-        "y": 1020,
+        "x": 860,
+        "y": 1440,
         "wires": [
             [
                 "be4a8da31d71cd21"
@@ -1322,8 +1311,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 3,
-        "x": 970,
-        "y": 1020,
+        "x": 1020,
+        "y": 1440,
         "wires": [
             [
                 "db28bda1511e9b46"
@@ -1348,8 +1337,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1120,
-        "y": 980,
+        "x": 1170,
+        "y": 1400,
         "wires": [
             [
                 "aeee56bc51bac5a9"
@@ -1368,8 +1357,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1140,
-        "y": 1020,
+        "x": 1190,
+        "y": 1440,
         "wires": [
             [
                 "aeee56bc51bac5a9"
@@ -1385,8 +1374,8 @@
         "links": [
             "6b45b4c31fad6b8b"
         ],
-        "x": 1295,
-        "y": 980,
+        "x": 1345,
+        "y": 1400,
         "wires": []
     },
     {
@@ -1398,8 +1387,8 @@
         "links": [
             "ce5672e1f22d7692"
         ],
-        "x": 1295,
-        "y": 920,
+        "x": 1345,
+        "y": 1340,
         "wires": []
     },
     {
@@ -1423,8 +1412,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 1140,
+        "x": 260,
+        "y": 1560,
         "wires": [
             [
                 "8ed7b16c7cf23baa"
@@ -1442,8 +1431,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 420,
-        "y": 1140,
+        "x": 470,
+        "y": 1560,
         "wires": [
             [
                 "b8cff6830921f2a3"
@@ -1461,8 +1450,8 @@
         "arraySpltType": "len",
         "stream": false,
         "addname": "",
-        "x": 630,
-        "y": 1140,
+        "x": 680,
+        "y": 1560,
         "wires": [
             [
                 "fa6fa09999cb358d"
@@ -1478,8 +1467,8 @@
         "links": [
             "6b45b4c31fad6b8b"
         ],
-        "x": 745,
-        "y": 1140,
+        "x": 795,
+        "y": 1560,
         "wires": []
     },
     {
@@ -1503,8 +1492,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 1200,
+        "x": 260,
+        "y": 1620,
         "wires": [
             [
                 "90fe9a52761c09b7"
@@ -1523,8 +1512,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 420,
-        "y": 1200,
+        "x": 470,
+        "y": 1620,
         "wires": [
             [
                 "21dcf8310fafea73"
@@ -1542,8 +1531,8 @@
         "arraySpltType": "len",
         "stream": false,
         "addname": "",
-        "x": 630,
-        "y": 1200,
+        "x": 680,
+        "y": 1620,
         "wires": [
             [
                 "7d549f9bb7ebadca"
@@ -1559,12 +1548,201 @@
         "links": [
             "6b45b4c31fad6b8b"
         ],
-        "x": 745,
-        "y": 1200,
+        "x": 795,
+        "y": 1620,
         "wires": []
     },
     {
-        "id": "8cb0d4e0d570fb80",
+        "id": "e9bf9b5822695ba1",
+        "type": "function",
+        "z": "35ebad916f0a27ed",
+        "name": "admin settings",
+        "func": "let adminTray = flow.get('adminTray');\nlet normalSettingMsg = {topic:'settingDone', payload:adminTray};\nlet initTraysMsg = null;\nlet batchTrayMsg = null;\nlet batchMqttMsg = null;\nlet msgId = context.get('msgId');\nlet traysConfig = flow.get('traysConfig');\nlet trayProps  = flow.get('trayProps');\nlet trays = [];\nlet mqttMsgs = [];\n\nlet bufsize = 4;\nlet buffer = new ArrayBuffer(bufsize);\nlet settingsView = new DataView(buffer);\n\nswitch (msg.payload.cube)\n{\n    case \"reloadTrays\":\n        adminTray[msg.payload.cube].value = msg.payload.value;\n        if (msg.payload.value == 1) initTraysMsg = {topic:'initFlow', payload: new Date().getTime()};\n        return [normalSettingMsg, batchTrayMsg, batchMqttMsg, initTraysMsg];\n        break;\n    case \"authorizeBadge\":\n        adminTray.authorizeBadge.value = msg.payload.value;\n        msgId = msgId + 1;\n        if (msgId > 15) msgId = 1;\n        context.set('msgId',msgId);\n        for (let itray in traysConfig) \n        {\n            traysConfig[itray].tray.authorizeBadge.value = msg.payload.value;\n            traysConfig[itray].tray.msgId.value = msgId;\n            traysConfig[itray].tray.authorizeBadgeField.value = 0;\n            traysConfig[itray].tray.authorizeBadgeField.value = traysConfig[itray].tray.authorizeBadgeField.value + (traysConfig[itray].tray.msgId.value << 12);\n            traysConfig[itray].tray.authorizeBadgeField.value = traysConfig[itray].tray.authorizeBadgeField.value  + traysConfig[itray].tray.authorizeBadge.value;            \n            settingsView.setUint8(0, 1); //setting\n            settingsView.setUint8(1, traysConfig[itray].tray.authorizeBadgeField.blinkybus.address); //address\n            settingsView.setInt16(2, traysConfig[itray].tray.authorizeBadgeField.value, true); //value\n            mqttMsgs.push({topic: trayProps.box + \"/\" + traysConfig[itray].cubeType + \"/\" + traysConfig[itray].tray.type + \"/\" + traysConfig[itray].tray.name + \"/setting\", payload:Buffer.from(buffer)});\n            trays.push(traysConfig[itray].tray);\n        }\n        batchTrayMsg = {topic: \"setAuthorizeBadgeAllTrays\", payload:trays, rate:100};\n        batchMqttMsg = {topic: \"setAuthorizeBadgeAllTrays\", payload:mqttMsgs, rate:500};\n        return [normalSettingMsg, batchTrayMsg, batchMqttMsg, initTraysMsg];\n        break;\n    case \"warnBadge\":\n        adminTray.warnBadge.value = msg.payload.value;\n        msgId = msgId + 1;\n        if (msgId > 15) msgId = 1;\n        context.set('msgId',msgId);\n        for (let itray in traysConfig) \n        {\n            traysConfig[itray].tray.warnBadge.value = msg.payload.value;\n            traysConfig[itray].tray.msgId.value = msgId;\n            traysConfig[itray].tray.sendWarningField.value = 0;\n            traysConfig[itray].tray.sendWarningField.value = traysConfig[itray].tray.sendWarningField.value + (traysConfig[itray].tray.warningMsg.value << 8);\n            traysConfig[itray].tray.sendWarningField.value = traysConfig[itray].tray.sendWarningField.value + (traysConfig[itray].tray.msgId.value << 12);\n            traysConfig[itray].tray.sendWarningField.value = traysConfig[itray].tray.sendWarningField.value  + traysConfig[itray].tray.warnBadge.value;            \n            settingsView.setUint8(0, 1); //setting\n            settingsView.setUint8(1, traysConfig[itray].tray.sendWarningField.blinkybus.address); //address\n            settingsView.setInt16(2, traysConfig[itray].tray.sendWarningField.value, true); //value\n            mqttMsgs.push({topic: trayProps.box + \"/\" + traysConfig[itray].cubeType + \"/\" + traysConfig[itray].tray.type + \"/\" + traysConfig[itray].tray.name + \"/setting\", payload:Buffer.from(buffer)});\n            trays.push(traysConfig[itray].tray);\n        }\n        batchTrayMsg = {topic: \"setWarnBadgeAllTrays\", payload:trays, rate:100};\n        batchMqttMsg = {topic: \"setWarnBadgeAllTrays\", payload:mqttMsgs, rate:500};\n        return [normalSettingMsg, batchTrayMsg, batchMqttMsg, initTraysMsg];\n        break;\n    case \"warningMsg\":\n        adminTray[msg.payload.cube].value = msg.payload.value;\n        for (let itray in traysConfig) \n        {\n            traysConfig[itray].tray.warningMsg.value = msg.payload.value;\n            trays.push(traysConfig[itray].tray);\n        }\n        batchTrayMsg = {topic: \"setWarningMsgAllTrays\", payload:trays, rate:100};\n        return [normalSettingMsg, batchTrayMsg, batchMqttMsg, initTraysMsg];\n        break;\n    default:\n        break;\n}\n\nreturn [normalSettingMsg, batchTrayMsg, batchMqttMsg, initTraysMsg];",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\ncontext.set('msgId',0);",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 620,
+        "wires": [
+            [
+                "f440bf4a174b2012"
+            ],
+            [
+                "7fcf3754b2f11d9f"
+            ],
+            [
+                "2627dbdc22bdcce7"
+            ],
+            [
+                "13be2bcbf639cc93"
+            ]
+        ]
+    },
+    {
+        "id": "f440bf4a174b2012",
+        "type": "link out",
+        "z": "35ebad916f0a27ed",
+        "name": "echo admin setting",
+        "mode": "link",
+        "links": [
+            "6b45b4c31fad6b8b",
+            "ce5672e1f22d7692"
+        ],
+        "x": 1385,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "13be2bcbf639cc93",
+        "type": "delay",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1100,
+        "y": 720,
+        "wires": [
+            [
+                "e6b2a65ac7c0f8e7"
+            ]
+        ]
+    },
+    {
+        "id": "7fcf3754b2f11d9f",
+        "type": "split",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 1090,
+        "y": 600,
+        "wires": [
+            [
+                "715986948f8c3228"
+            ]
+        ]
+    },
+    {
+        "id": "2627dbdc22bdcce7",
+        "type": "split",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 1090,
+        "y": 660,
+        "wires": [
+            [
+                "13a9af134647f18a"
+            ]
+        ]
+    },
+    {
+        "id": "4418d23ffe13ba35",
+        "type": "link out",
+        "z": "35ebad916f0a27ed",
+        "name": "batchMqtt out",
+        "mode": "link",
+        "links": [
+            "644bd24ad5c779d2"
+        ],
+        "x": 1495,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "13a9af134647f18a",
+        "type": "function",
+        "z": "35ebad916f0a27ed",
+        "name": "shift Up",
+        "func": "return msg.payload;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 660,
+        "wires": [
+            [
+                "ccc4cfd8f2db0381"
+            ]
+        ]
+    },
+    {
+        "id": "715986948f8c3228",
+        "type": "delay",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": true,
+        "outputs": 1,
+        "x": 1250,
+        "y": 600,
+        "wires": [
+            [
+                "f440bf4a174b2012"
+            ]
+        ]
+    },
+    {
+        "id": "ccc4cfd8f2db0381",
+        "type": "delay",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": true,
+        "outputs": 1,
+        "x": 1390,
+        "y": 660,
+        "wires": [
+            [
+                "4418d23ffe13ba35"
+            ]
+        ]
+    },
+    {
+        "id": "151071c9330fcaa6",
         "type": "debug",
         "z": "35ebad916f0a27ed",
         "name": "debug 1",
@@ -1575,24 +1753,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1220,
-        "y": 800,
-        "wires": []
-    },
-    {
-        "id": "1cd015e6ea84eea7",
-        "type": "debug",
-        "z": "35ebad916f0a27ed",
-        "name": "debug 2",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1280,
-        "y": 460,
+        "x": 1700,
+        "y": 720,
         "wires": []
     }
 ]
