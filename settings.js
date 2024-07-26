@@ -335,10 +335,10 @@ module.exports = {
         //tours: false,
 
         page: {
-            title: "blinky-mqtt-trays"
+            title: "bl-iwa-station-trays"
         },
         header: {
-            title: "blinky-mqtt-trays"
+            title: "bl-iwa-station-trays"
         },
 
         palette: {

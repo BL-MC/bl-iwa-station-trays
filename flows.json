@@ -2,7 +2,7 @@
     {
         "id": "35ebad916f0a27ed",
         "type": "tab",
-        "label": "blinky-mqtt-trays",
+        "label": "bl-iwa-station-trays",
         "disabled": false,
         "info": "",
         "env": []
@@ -114,6 +114,7 @@
         "protocolVersion": "4",
         "keepalive": "60",
         "cleansession": true,
+        "autoUnsubscribe": true,
         "birthTopic": "",
         "birthQos": "0",
         "birthPayload": "",
@@ -491,7 +492,7 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Create Readings",
-        "func": "let newMsg = null;\nlet archiveMsg = null;\nlet initCubeMsg = null;\nlet badgeMsg = null;\nlet topicSplit = msg.topic.split('/');\nif (topicSplit[1] == 'tray') return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\nlet trayName = topicSplit[3];\n\nlet traysConfig = flow.get('traysConfig');\nif (traysConfig == undefined) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\nif (traysConfig.length < 1) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n\nlet badgesConfig = flow.get('badgesConfig');\nif (badgesConfig == undefined) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\nif (badgesConfig.length < 1) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n\nlet trayConfig = null;\nlet trayIndex = -1;\nfor (let ii = 0; ii < traysConfig.length; ++ii)\n{\n    if (traysConfig[ii].tray.name == trayName)\n    {\n        trayConfig = traysConfig[ii];\n        trayIndex = ii;\n    }\n}\nif (trayConfig ==  null) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\ntrayConfig.cubeType = topicSplit[1];\ntrayConfig.tray.timeStamp = new Date().getTime();\nlet stateView  = new DataView(new ArrayBuffer(2));\nfor (let ib = 0; ib < 2; ++ib)   stateView.setUint8(ib, msg.payload[1 - ib]);\nlet state = stateView.getInt16(0)\nif (state == 1)\n{\n    initCubeMsg = {topic:\"initDevice\",payload:trayConfig};\n    return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n}\n\nfor (let icube = 0; icube < trayConfig.blinkybusCubes.length; ++icube)\n{\n    let cube = trayConfig.tray[trayConfig.blinkybusCubes[icube]];\n    let dataView  = new DataView(new ArrayBuffer(2));\n    for (let ib = 0; ib < 2; ++ib)   dataView.setUint8(ib, msg.payload[(cube.blinkybus.address * 2) + 1 - ib]);\n    cube.value = dataView.getInt16(0);\n    let offset = 0;\n    if (cube.blinkybus.hasOwnProperty(\"offset\")) offset = cube.blinkybus.offset;\n    cube.value = (cube.value - offset) / cube.blinkybus.scale;\n}\nif (trayConfig.tray.hasOwnProperty('lastUpdate')) trayConfig.tray.lastUpdate.value = 0;\n\ntrayConfig.tray.timeStamp = new Date().getTime();\nnewMsg = {topic:trayName, payload:trayConfig.tray};\nif (trayConfig.tray.hasOwnProperty('newData'))\n{\n    if (trayConfig.tray.newData.value > 0)\n    {\n        let dataView  = new DataView(new ArrayBuffer(4));\n        dataView.setUint16(0,trayConfig.tray.badgeEvent.value);\n        dataView.setUint16(2,trayConfig.tray.badgeSerialNo.value);\n        let event = dataView.getUint32(0);\n        badgeMsg = {topic:\"newData\", payload:JSON.parse(JSON.stringify(trayConfig.tray)), event:event, timeStamp:trayConfig.tray.timeStamp};\n        trayConfig.archiveTime = trayConfig.tray.timeStamp;\n        archiveMsg = newMsg;\n    }\n}\n\nlet archiveTimes = flow.get('archiveTimes');\nif ((trayConfig.tray.timeStamp - trayConfig.archiveTime) > trayConfig.tray.arcPeriod)\n{\n    trayConfig.archiveTime = trayConfig.tray.timeStamp;\n    archiveMsg = newMsg;\n}\nreturn  [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n",
+        "func": "let newMsg = null;\nlet archiveMsg = null;\nlet initCubeMsg = null;\nlet badgeMsg = null;\nlet topicSplit = msg.topic.split('/');\nif (topicSplit[1] == 'tray') return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\nlet trayName = topicSplit[3];\n\nlet traysConfig = flow.get('traysConfig');\nif (traysConfig == undefined) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\nif (traysConfig.length < 1) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n\nlet badgesConfig = flow.get('badgesConfig');\nif (badgesConfig == undefined) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\nif (badgesConfig.length < 1) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n\nlet trayConfig = null;\nlet trayIndex = -1;\nfor (let ii = 0; ii < traysConfig.length; ++ii)\n{\n    if (traysConfig[ii].tray.name == trayName)\n    {\n        trayConfig = traysConfig[ii];\n        trayIndex = ii;\n    }\n}\nif (trayConfig ==  null) return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\ntrayConfig.cubeType = topicSplit[1];\ntrayConfig.tray.timeStamp = new Date().getTime();\nlet stateView  = new DataView(new ArrayBuffer(2));\nfor (let ib = 0; ib < 2; ++ib)   stateView.setUint8(ib, msg.payload[1 - ib]);\nlet state = stateView.getInt16(0)\nif (state == 1)\n{\n    initCubeMsg = {topic:\"initDevice\",payload:trayConfig};\n    return [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n}\n\nfor (let icube = 0; icube < trayConfig.blinkybusCubes.length; ++icube)\n{\n    let cube = trayConfig.tray[trayConfig.blinkybusCubes[icube]];\n    let dataView  = new DataView(new ArrayBuffer(2));\n    for (let ib = 0; ib < 2; ++ib)   dataView.setUint8(ib, msg.payload[(cube.blinkybus.address * 2) + 1 - ib]);\n    cube.value = dataView.getInt16(0);\n    let offset = 0;\n    if (cube.blinkybus.hasOwnProperty(\"offset\")) offset = cube.blinkybus.offset;\n    cube.value = (cube.value - offset) / cube.blinkybus.scale;\n}\nif (trayConfig.tray.hasOwnProperty('lastUpdate')) trayConfig.tray.lastUpdate.value = 0;\n\ntrayConfig.tray.timeStamp = new Date().getTime();\nnewMsg = {topic:trayName, payload:trayConfig.tray};\nif (trayConfig.tray.hasOwnProperty('newData'))\n{\n    if (trayConfig.tray.newData.value > 0)\n    {\n        let dataView  = new DataView(new ArrayBuffer(4));\n        dataView.setUint16(0,trayConfig.tray.badgeEvent.value);\n        dataView.setUint16(2,trayConfig.tray.badgeSerialNo.value);\n        let event = dataView.getUint32(0);\n//        node.warn(\"badge: \" + trayConfig.tray.badgeSerialNo.value.toString() + \", event: \" + trayConfig.tray.badgeEvent.value.toString() + \", tray: \" + trayConfig.tray.serialNo.value.toString() + \", rssi: \" + trayConfig.tray.badgeRssi.value.toString());\n        badgeMsg = {topic:\"newData\", payload:JSON.parse(JSON.stringify(trayConfig.tray)), event:event, timeStamp:trayConfig.tray.timeStamp};\n        trayConfig.archiveTime = trayConfig.tray.timeStamp;\n        archiveMsg = newMsg;\n    }\n}\n\nlet archiveTimes = flow.get('archiveTimes');\nif ((trayConfig.tray.timeStamp - trayConfig.archiveTime) > trayConfig.tray.arcPeriod)\n{\n    trayConfig.archiveTime = trayConfig.tray.timeStamp;\n    archiveMsg = newMsg;\n}\nreturn  [newMsg,archiveMsg,initCubeMsg,badgeMsg];\n",
         "outputs": 4,
         "timeout": "",
         "noerr": 0,
@@ -541,7 +542,7 @@
         "z": "35ebad916f0a27ed",
         "name": "Gizmo MQTT",
         "topic": "",
-        "qos": "1",
+        "qos": "0",
         "retain": "false",
         "respTopic": "",
         "contentType": "",
@@ -1085,7 +1086,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1250,
+        "x": 1260,
         "y": 1240,
         "wires": []
     },
@@ -1200,7 +1201,7 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Coalesce station reports",
-        "func": "let events = context.get(\"events\");\nif (msg.topic == \"newData\")\n{\n    let eventIndex = -1\n    for (let ievent in events)\n    {\n        if (events[ievent].event == msg.event)\n        {\n            eventIndex = Number(ievent);\n            break;\n        }\n    }\n    if (eventIndex < 0)\n    {\n        let newEvent = {event:msg.event, timeStamp:msg.timeStamp,stations:[]};\n        newEvent.stations.push(msg.payload);\n        events.push(newEvent);\n    }\n    else\n    {\n        events[eventIndex].stations.push(msg.payload);\n    }\n    return null;\n}\nif (msg.topic == \"cleanup\")\n{\n    let oldbadges = [];\n    for (let ievent in events)\n    {\n        if ((msg.payload - events[ievent].timeStamp) > 1000)\n        {\n            let badgesConfig = flow.get('badgesConfig');\n            let index = -1;\n            for (let ibadge in badgesConfig)\n            {\n                if (badgesConfig[ibadge].tray.serialNo.value == events[ievent].stations[0].badgeSerialNo.value)\n                {\n                    index = Number(ibadge);\n                }\n            }\n            if (index>= 0)\n            {\n                badgesConfig[index].tray.vbat.value   = events[ievent].stations[0].badgeVbat.value;\n                badgesConfig[index].tray.vusb.value   = events[ievent].stations[0].badgeVusb.value;\n                badgesConfig[index].tray.event.value  = events[ievent].stations[0].badgeEvent.value;\n                badgesConfig[index].tray.button.value = events[ievent].stations[0].badgebutton.value;\n                badgesConfig[index].tray.move.value   = events[ievent].stations[0].badgeMove.value;\n                badgesConfig[index].tray.charge.value = events[ievent].stations[0].badgeCharge.value;\n                badgesConfig[index].tray.auth.value   = events[ievent].stations[0].badgeAuth.value;\n                if (badgesConfig[index].tray.auth.value == 0) badgesConfig[index].tray.user.value = \"none\";\n                badgesConfig[index].tray.lastUpdate.value = 0.0;\n                badgesConfig[index].tray.timeStamp = events[ievent].stations[0].timeStamp;\n\n\n                events[ievent].stations.sort((a, b) => b.badgeRssi.value - a.badgeRssi.value);\n                \n                badgesConfig[index].tray.rssi.value = [[],[]];\n                for (let istation in events[ievent].stations)\n                {\n                    badgesConfig[index].tray.rssi.value[0].push(events[ievent].stations[istation].serialNo.value);\n                    badgesConfig[index].tray.rssi.value[1].push(events[ievent].stations[istation].badgeRssi.value);\n                }\n               triangulate(badgesConfig[index].tray,  events[ievent].stations);\n                oldbadges.push(JSON.parse(JSON.stringify(badgesConfig[index].tray)));\n            }\n            events.splice(Number(ievent),1);\n        }\n    }\n    if (oldbadges.length > 0) return {topic:\"newData\", payload:oldbadges};\n}\nreturn null;\nfunction triangulate(badge, stations)\n{\n    if (stations.length == 1)\n    {\n        badge.xpos.value = stations[0].xpos.value;\n        badge.ypos.value = stations[0].ypos.value;\n        badge.zpos.value = 0.0;\n        return;\n    }\n    if (stations.length == 2)\n    {\n        let powerCircle = getPowerCircle(stations[0], stations[1])\n        badge.xpos.value = Math.round(1000 * powerCircle.xbisect) / 1000;\n        badge.ypos.value = Math.round(1000 * powerCircle.ybisect) / 1000;\n        badge.zpos.value = 0.0;\n        return;\n    }\n    if (stations.length >= 3)\n    {\n        let powerCircle = getPowerCircle(stations[0], stations[1]);\n\n        let d1cx = stations[1].xpos.value - powerCircle.xcircle;\n        let d1cy = stations[1].ypos.value - powerCircle.ycircle;\n        let d2cx = stations[2].xpos.value - powerCircle.xcircle;\n        let d2cy = stations[2].ypos.value - powerCircle.ycircle;\n        let theta1 = Math.atan2(d1cy, d1cx);\n        let theta2 = Math.atan2(d2cy, d2cx);\n        let dtheta = theta2 - theta1;\n        let powerRatio = stations[2].badgeRssi.value - stations[1].badgeRssi.value;\n        powerRatio = Math.pow(10,powerRatio / 20);\n        dtheta = dtheta * powerRatio / 2.0;\n        dtheta = dtheta + theta1;\n        badge.xpos.value = powerCircle.rcircle * Math.cos(dtheta) + powerCircle.xcircle\n        badge.ypos.value = powerCircle.rcircle * Math.sin(dtheta) + powerCircle.ycircle\n        badge.xpos.value = Math.round(1000 * badge.xpos.value) / 1000;\n        badge.ypos.value = Math.round(1000 * badge.ypos.value) / 1000;\n        badge.zpos.value = 0.0;\n        return;\n    }\n\n}\nfunction distanceBetweenStations(stationA, stationB)\n{\n    let dx = stationA.xpos.value - stationB.xpos.value;\n    let dy = stationA.ypos.value - stationB.ypos.value;\n    return Math.sqrt((dx * dx) + (dy * dy));\n}\nfunction getPowerCircle(stationA, stationB)\n{\n        if (stationA.badgeRssi.value == stationB.badgeRssi.value) stationB.badgeRssi.value = stationB.badgeRssi.value -1;\n        let powerRatio = stationA.badgeRssi.value - stationB.badgeRssi.value;\n        powerRatio = Math.pow(10,powerRatio / 20);\n        let deltaStation  = distanceBetweenStations(stationA, stationB);\n        let xpcircleCenter= -deltaStation / (powerRatio * powerRatio - -1);\n        let rcircle = Math.sqrt(xpcircleCenter * (xpcircleCenter - deltaStation));\n        let theta = Math.atan2(stationB.ypos.value - stationA.ypos.value, stationB.xpos.value - stationA.xpos.value);\n        let xc = xpcircleCenter * Math.cos(theta) + stationA.xpos.value;\n        let yc = xpcircleCenter * Math.sin(theta) + stationA.ypos.value;\n        let xcross = xpcircleCenter + rcircle;\n        let xbisect = xcross * Math.cos(theta) + stationA.xpos.value\n        let ybisect = xcross * Math.sin(theta) + stationA.ypos.value\n        return {rcircle:rcircle, xcircle:xc, ycircle:yc, xbisect:xbisect, ybisect:ybisect, theta:theta};\n}",
+        "func": "let events = context.get(\"events\");\nif (msg.topic == \"newData\")\n{\n    let eventIndex = -1\n    for (let ievent in events)\n    {\n        if (events[ievent].event == msg.event)\n        {\n            eventIndex = Number(ievent);\n            break;\n        }\n    }\n    if (eventIndex < 0)\n    {\n        let newEvent = {event:msg.event, timeStamp:msg.timeStamp,stations:[]};\n        newEvent.stations.push(msg.payload);\n        events.push(newEvent);\n    }\n    else\n    {\n        events[eventIndex].stations.push(msg.payload);\n    }\n    return null;\n}\nif (msg.topic == \"cleanup\")\n{\n    let oldbadges = [];\n    for (let ievent in events)\n    {\n        if ((msg.payload - events[ievent].timeStamp) > 1000)\n        {\n            let badgesConfig = flow.get('badgesConfig');\n            let index = -1;\n            for (let ibadge in badgesConfig)\n            {\n                if (badgesConfig[ibadge].tray.serialNo.value == events[ievent].stations[0].badgeSerialNo.value)\n                {\n                    index = Number(ibadge);\n                }\n            }\n            if (index>= 0)\n            {\n                badgesConfig[index].tray.vbat.value   = events[ievent].stations[0].badgeVbat.value;\n                badgesConfig[index].tray.vusb.value   = events[ievent].stations[0].badgeVusb.value;\n                badgesConfig[index].tray.event.value  = events[ievent].stations[0].badgeEvent.value;\n                badgesConfig[index].tray.button.value = events[ievent].stations[0].badgebutton.value;\n                badgesConfig[index].tray.move.value   = events[ievent].stations[0].badgeMove.value;\n                badgesConfig[index].tray.charge.value = events[ievent].stations[0].badgeCharge.value;\n                badgesConfig[index].tray.auth.value   = events[ievent].stations[0].badgeAuth.value;\n\n                badgesConfig[index].tray.notify.value = 0;\n                if (badgesConfig[index].tray.button.value > 0) badgesConfig[index].tray.notify.value = 1;\n                if (badgesConfig[index].tray.move.value   > 0) badgesConfig[index].tray.notify.value = 1;\n                if ((badgesConfig[index].tray.charge.value == 0) && (badgesConfig[index].tray.auth.value == 0))\n                {\n                    badgesConfig[index].tray.notify.value = 1;\n                }\n\n                if (badgesConfig[index].tray.auth.value == 0) badgesConfig[index].tray.user.value = \"none\";\n                badgesConfig[index].tray.lastUpdate.value = 0.0;\n                badgesConfig[index].tray.timeStamp = events[ievent].stations[0].timeStamp;\n\n                events[ievent].stations.sort((a, b) => b.badgeRssi.value - a.badgeRssi.value);\n                \n                badgesConfig[index].tray.rssi.value = [[],[]];\n                for (let istation in events[ievent].stations)\n                {\n                    badgesConfig[index].tray.rssi.value[0].push(events[ievent].stations[istation].serialNo.value);\n                    badgesConfig[index].tray.rssi.value[1].push(events[ievent].stations[istation].badgeRssi.value);\n                }\n                triangulate(badgesConfig[index].tray,  events[ievent].stations);\n                oldbadges.push(JSON.parse(JSON.stringify(badgesConfig[index].tray)));\n            }\n            events.splice(Number(ievent),1);\n        }\n    }\n    if (oldbadges.length > 0) \n    {\n        let adminTray = flow.get('adminTray');\n        let badgesConfig = flow.get('badgesConfig');\n        let badgeSummaries = [];\n        for (let ibadge in badgesConfig)\n        {\n            let btray = badgesConfig[ibadge].tray\n            let statusCode = 0;\n            if (btray.button.value     > 0) statusCode = statusCode + 1;\n            if (btray.move.value       > 0) statusCode = statusCode + 2;\n            if (btray.charge.value     > 0) statusCode = statusCode + 4;\n            if (btray.auth.value       > 0) statusCode = statusCode + 8;\n            if (btray.lastUpdate.value > 0) statusCode = statusCode + 16;\n            let badgeSummary = \n            {   \n                serialNo    : btray.serialNo.value, \n                xpos        : btray.xpos.value,\n                ypos        : btray.ypos.value,\n                zpos        : btray.zpos.value,\n                statusCode  : statusCode,\n                user        : btray.user.value\n            };\n            badgeSummaries.push(badgeSummary);\n        }\n        adminTray.timeStamp = new Date().getTime();\n        adminTray.badgeSummary.value = JSON.parse(JSON.stringify(badgeSummaries));\n        oldbadges.push(JSON.parse(JSON.stringify(adminTray)));\n        return {topic:\"newData\", payload:oldbadges};\n    }\n}\nreturn null;\nfunction triangulate(badge, stations)\n{\n    if (stations.length == 1)\n    {\n        badge.xpos.value = stations[0].xpos.value;\n        badge.ypos.value = stations[0].ypos.value;\n        badge.zpos.value = 0.0;\n        return;\n    }\n    if (stations.length == 2)\n    {\n        let powerCircle = getPowerCircle(stations[0], stations[1])\n        badge.xpos.value = Math.round(1000 * powerCircle.xbisect) / 1000;\n        badge.ypos.value = Math.round(1000 * powerCircle.ybisect) / 1000;\n        badge.zpos.value = 0.0;\n        return;\n    }\n    if (stations.length >= 3)\n    {\n        let powerCircle = getPowerCircle(stations[0], stations[1]);\n\n        let d1cx = stations[1].xpos.value - powerCircle.xcircle;\n        let d1cy = stations[1].ypos.value - powerCircle.ycircle;\n        let d2cx = stations[2].xpos.value - powerCircle.xcircle;\n        let d2cy = stations[2].ypos.value - powerCircle.ycircle;\n        let theta1 = Math.atan2(d1cy, d1cx);\n        let theta2 = Math.atan2(d2cy, d2cx);\n        let dtheta = theta2 - theta1;\n        let powerRatio = stations[2].badgeRssi.value - stations[1].badgeRssi.value;\n        powerRatio = Math.pow(10,powerRatio / 20);\n        dtheta = dtheta * powerRatio / 2.0;\n        dtheta = dtheta + theta1;\n        badge.xpos.value = powerCircle.rcircle * Math.cos(dtheta) + powerCircle.xcircle\n        badge.ypos.value = powerCircle.rcircle * Math.sin(dtheta) + powerCircle.ycircle\n        badge.xpos.value = Math.round(1000 * badge.xpos.value) / 1000;\n        badge.ypos.value = Math.round(1000 * badge.ypos.value) / 1000;\n        badge.zpos.value = 0.0;\n        return;\n    }\n\n}\nfunction distanceBetweenStations(stationA, stationB)\n{\n    let dx = stationA.xpos.value - stationB.xpos.value;\n    let dy = stationA.ypos.value - stationB.ypos.value;\n    return Math.sqrt((dx * dx) + (dy * dy));\n}\nfunction getPowerCircle(stationA, stationB)\n{\n        if (stationA.badgeRssi.value == stationB.badgeRssi.value) stationB.badgeRssi.value = stationB.badgeRssi.value - 0.1;\n        let powerRatio = stationA.badgeRssi.value - stationB.badgeRssi.value;\n        powerRatio = Math.pow(10,powerRatio / 20);\n        let deltaStation  = distanceBetweenStations(stationA, stationB);\n        let xpcircleCenter= -deltaStation / (powerRatio * powerRatio - -1);\n        let rcircle = Math.sqrt(xpcircleCenter * (xpcircleCenter - deltaStation));\n        let theta = Math.atan2(stationB.ypos.value - stationA.ypos.value, stationB.xpos.value - stationA.xpos.value);\n        let xc = xpcircleCenter * Math.cos(theta) + stationA.xpos.value;\n        let yc = xpcircleCenter * Math.sin(theta) + stationA.ypos.value;\n        let xcross = xpcircleCenter + rcircle;\n        let xbisect = xcross * Math.cos(theta) + stationA.xpos.value\n        let ybisect = xcross * Math.sin(theta) + stationA.ypos.value\n        return {rcircle:rcircle, xcircle:xc, ycircle:yc, xbisect:xbisect, ybisect:ybisect, theta:theta};\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1259,8 +1260,9 @@
         "y": 980,
         "wires": [
             [
+                "6e6e2c3ef502a90a",
                 "aeee56bc51bac5a9",
-                "6e6e2c3ef502a90a"
+                "fabba2e0715f2088"
             ]
         ]
     },
@@ -1483,7 +1485,7 @@
         "id": "2504a3f4988d323f",
         "type": "inject",
         "z": "35ebad916f0a27ed",
-        "name": "Every 2 Minutes",
+        "name": "Every 30 seconds",
         "props": [
             {
                 "p": "payload"
@@ -1493,7 +1495,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "120",
+        "repeat": "30",
         "crontab": "",
         "once": true,
         "onceDelay": "60",
@@ -1513,7 +1515,7 @@
         "type": "function",
         "z": "35ebad916f0a27ed",
         "name": "Check for stale badges",
-        "func": "let badgesConfig = flow.get('badgesConfig');\nlet now = new Date().getTime();\nlet staleBadges = [];\nfor (let ii = 0; ii < badgesConfig.length; ++ii)\n{\n    if (badgesConfig[ii].tray.hasOwnProperty('lastUpdate'))\n    {\n        let milli = now - badgesConfig[ii].tray.timeStamp;\n        badgesConfig[ii].tray.lastUpdate.value = Math.round(milli / 3600) / 1000;\n        if (milli > badgesConfig[ii].tray.arcPeriod)\n        {\n            staleBadges.push(badgesConfig[ii].tray);\n        }\n    }\n}\nif (staleBadges.length < 1) return null;\nreturn {topic: 'staleBadges',payload:staleBadges};",
+        "func": "let badgesConfig = flow.get('badgesConfig');\nlet now = new Date().getTime();\nlet staleBadges = [];\nfor (let ii = 0; ii < badgesConfig.length; ++ii)\n{\n    if (badgesConfig[ii].tray.hasOwnProperty('lastUpdate'))\n    {\n        let milli = now - badgesConfig[ii].tray.timeStamp;\n        \n        if (milli > badgesConfig[ii].tray.arcPeriod)\n        {\n            badgesConfig[ii].tray.lastUpdate.value = Math.round(milli / 3600) / 1000;\n            badgesConfig[ii].tray.notify.value = 1;\n            staleBadges.push(badgesConfig[ii].tray);\n        }\n    }\n}\nif (staleBadges.length < 1) return null;\nlet adminTray = flow.get('adminTray');\nlet badgeSummaries = [];\nfor (let ibadge in badgesConfig)\n{\n    let btray = badgesConfig[ibadge].tray\n    let statusCode = 0;\n    if (btray.button.value     > 0) statusCode = statusCode + 1;\n    if (btray.move.value       > 0) statusCode = statusCode + 2;\n    if (btray.charge.value     > 0) statusCode = statusCode + 4;\n    if (btray.auth.value       > 0) statusCode = statusCode + 8;\n    if (btray.lastUpdate.value > 0) statusCode = statusCode + 16;\n\n    let badgeSummary = \n    {   \n        serialNo    : btray.serialNo.value, \n        xpos        : btray.xpos.value,\n        ypos        : btray.ypos.value,\n        zpos        : btray.zpos.value,\n        statusCode  : statusCode,\n        user        : btray.user.value\n    };\n    badgeSummaries.push(badgeSummary);\n}\nadminTray.timeStamp = new Date().getTime();\nadminTray.badgeSummary.value = JSON.parse(JSON.stringify(badgeSummaries));\nstaleBadges.push(adminTray);\n\nreturn {topic: 'staleBadges',payload:staleBadges};",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1554,7 +1556,8 @@
         "name": "Stale Badge out",
         "mode": "link",
         "links": [
-            "6b45b4c31fad6b8b"
+            "6b45b4c31fad6b8b",
+            "8c3a8a2ad2d24b5c"
         ],
         "x": 835,
         "y": 1380,
@@ -1766,6 +1769,152 @@
         "wires": [
             [
                 "aeee56bc51bac5a9"
+            ]
+        ]
+    },
+    {
+        "id": "fabba2e0715f2088",
+        "type": "switch",
+        "z": "35ebad916f0a27ed",
+        "name": "Filter on badge",
+        "property": "payload.type",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "$(BADGETYPE)",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1260,
+        "y": 1040,
+        "wires": [
+            [
+                "b0dea0845c5deb2b"
+            ]
+        ]
+    },
+    {
+        "id": "b0dea0845c5deb2b",
+        "type": "function",
+        "z": "35ebad916f0a27ed",
+        "name": "ntfy msgs",
+        "func": "let badgeHistory = context.get(\"badgeHistory\");\nlet btray = msg.payload\nlet index = -1;\nfor (let ibadge in badgeHistory)\n{\n    if (badgeHistory[ibadge].serialNo.value == btray.serialNo.value) index = Number(ibadge);\n}\nlet sendNotification = false\nif (btray.notify.value > 0)\n{\n    if (index < 0)\n    {\n        sendNotification = true;\n        \n    }\n    else\n    {\n        let newStatusCode = getStatusCode(btray);\n        let oldStatusCode = getStatusCode(badgeHistory[index]);\n        if (newStatusCode != oldStatusCode) sendNotification = true;\n    }\n}\nif (index < 0)\n{\n    badgeHistory.push(JSON.parse(JSON.stringify(btray)));\n}\nelse\n{\n    badgeHistory[index] = JSON.parse(JSON.stringify(btray));\n}\nif (!sendNotification) return null;\n\nlet message = \"\";\n\nif ((btray.charge.value == 0) && (btray.auth.value == 0))\n{\n    message = \"Unauthorized access with  Badge \" + btray.serialNo.value.toString();\n}\nif (btray.button.value > 0) \n{\n    message = \"Assistance requested by user \" + btray.user.value + \" with  Badge \" + btray.serialNo.value.toString();\n}\nif (btray.move.value > 0)   \n{\n    message = \"No motion detected from user \" + btray.user.value + \" with  Badge \" + btray.serialNo.value.toString();\n}\nif (btray.lastUpdate.value > 0) \n{\n    message = \"No update from user \" + btray.user.value + \" with  Badge \" + btray.serialNo.value.toString();\n}\n\nlet msgs = [];\nlet url = \"http://\" + env.get(\"NTFYIP\") + \"/all\"\nlet rateLimit = 200;\nmsgs.push({topic:\"all\",url:url, payload:message,rate:rateLimit});\nurl = \"http://\" + env.get(\"NTFYIP\") + \"/iwa\";\nmsgs.push({topic:\"iwa\",url:url, payload:message,rate:rateLimit});\nreturn {topic:\"ntfy\",payload:msgs};\nfunction getStatusCode(tray)\n{\n    let statusCode = 0;\n    if (tray.button.value     > 0) statusCode = statusCode + 1;\n    if (tray.move.value       > 0) statusCode = statusCode + 2;\n    if (tray.charge.value     > 0) statusCode = statusCode + 4;\n    if (tray.auth.value       > 0) statusCode = statusCode + 8;\n    if (tray.lastUpdate.value > 0) statusCode = statusCode + 16;\n    return statusCode;\n}",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "context.set(\"badgeHistory\",[])",
+        "finalize": "",
+        "libs": [],
+        "x": 1420,
+        "y": 1040,
+        "wires": [
+            [
+                "359453b09345d1e0"
+            ]
+        ]
+    },
+    {
+        "id": "82c50073c6c82ff2",
+        "type": "http request",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "basic",
+        "senderr": false,
+        "headers": [],
+        "x": 2030,
+        "y": 1040,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b5a389edf4606447",
+        "type": "function",
+        "z": "35ebad916f0a27ed",
+        "name": "promote",
+        "func": "return msg.payload;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1720,
+        "y": 1040,
+        "wires": [
+            [
+                "58e7330582ef318a"
+            ]
+        ]
+    },
+    {
+        "id": "58e7330582ef318a",
+        "type": "delay",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": true,
+        "outputs": 1,
+        "x": 1870,
+        "y": 1040,
+        "wires": [
+            [
+                "82c50073c6c82ff2"
+            ]
+        ]
+    },
+    {
+        "id": "359453b09345d1e0",
+        "type": "split",
+        "z": "35ebad916f0a27ed",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 1590,
+        "y": 1040,
+        "wires": [
+            [
+                "b5a389edf4606447"
+            ]
+        ]
+    },
+    {
+        "id": "8c3a8a2ad2d24b5c",
+        "type": "link in",
+        "z": "35ebad916f0a27ed",
+        "name": "Stale badges to ntfy",
+        "links": [
+            "7d549f9bb7ebadca"
+        ],
+        "x": 1035,
+        "y": 1040,
+        "wires": [
+            [
+                "fabba2e0715f2088"
             ]
         ]
     }
