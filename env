@@ -1,10 +1,13 @@
 BOX=blinky-lite-box-01
-TRAYTYPE=blinky-mqtt
-MQTTCLIENTID=blinky-lite-box-01-blinky-mqtt-tray
-MQTTSERVERIP=192.168.1.161
+TRAYTYPE=bl-iwa-station
+BADGETYPE=bl-iwa-badge
+MQTTCLIENTID=bl-iwa-station-trays
+MQTTSERVERIP=192.168.4.1
 MQTTUSERNAME=blinky-lite-box-01
 MQTTPASSWORD=xxxx
 MQTTPORT=1883
+NTFYIP=blinky-ntfy:80
+NTFYUSERNAME=admin
+NTFYPASSWORD=xxxx
 NODEREDPORT=60428
 ENABLE_NODERED_EDITOR=1
-
